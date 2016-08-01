@@ -13,6 +13,8 @@ import org.jsoup.select.Elements;
 public class WikiPhilosophy {
 	
 	final static WikiFetcher wf = new WikiFetcher();
+	final static List<String> visited = new ArrayList<String>();
+	final static String philosophy = "https://en.wikipedia.org/wiki/Philosophy";
 	
 	/**
 	 * Tests a conjecture about Wikipedia and Philosophy.
@@ -28,24 +30,43 @@ public class WikiPhilosophy {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		
-        // some example code to get you started
 
-		String url = "https://en.wikipedia.org/wiki/Java_(programming_language)";
-		Elements paragraphs = wf.fetchWikipedia(url);
+		String start = "https://en.wikipedia.org/wiki/Java_(programming_language)";
+		tryGettingToDestination(start, philosophy, 10);
 
-		Element firstPara = paragraphs.get(0);
-		
-		Iterable<Node> iter = new WikiNodeIterable(firstPara);
-		for (Node node: iter) {
-			if (node instanceof TextNode) {
-				System.out.print(node);
-			}
-        }
-
-        // the following throws an exception so the test fails
-        // until you update the code
-        String msg = "Complete this lab by adding your code and removing this statement.";
-        throw new UnsupportedOperationException(msg);
 	}
+
+	public static void tryGettingToDestination(String start, String dest, int maxTries) throws IOException {
+		String curr = start;
+		for (int i = 0; i < maxTries; i++) {
+			if (visited.contains(curr)) {
+				System.err.println("Loop detected.");
+				return;
+			} else {
+				visited.add(curr);
+			}
+
+			Element element = getFirstUrlFromPage(curr);
+			if (element == null) {
+				System.err.println("Dead-end detected.");
+				return;
+			}
+			System.out.println("- " + element.text());
+			curr = element.attr("abs:href");
+
+			if (curr.equals(dest)) {
+				System.out.println("Reached Philosophy!");
+				break;
+			}
+		}
+
+	}
+
+	public static Element getFirstUrlFromPage(String url) throws IOException {
+		Elements paragraphs = wf.fetchWikipedia(url);
+		WikiParser wp = new WikiParser(paragraphs);
+		Element element = wp.getFirstUrlFromPage();
+		return element;
+	}
+		
 }
